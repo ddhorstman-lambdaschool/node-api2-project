@@ -1,17 +1,18 @@
-const express = require('express');
+const posts = require('express').Router();
+const commentsRouter = require('./commentsRouter.js');
 const db = require('../data/db.js');
-const router = express.Router();
 
 
-router.get("/", (req,res)=>{
-    db.find()
-    .then(posts => res.status(200).json(posts))
-    .catch(() => res.status(500).json(
-        { errorMessage: "The posts information could not be retrieved." }
-    ));
+posts.get("/", (req, res) => {
+    db
+        .find()
+        .then(posts => res.status(200).json(posts))
+        .catch(() => res.status(500).json(
+            { errorMessage: "The posts information could not be retrieved." }
+        ));
 });
 
-router.post("/", (req, res) => {
+posts.post("/", (req, res) => {
     const { title, contents } = req.body;
     if (!title || !contents) {
         return res.status(400).json({
@@ -27,4 +28,9 @@ router.post("/", (req, res) => {
         }));
 });
 
-module.exports = router;
+posts.use("/:id/comments", (req, res, next) => {
+    req.id = req.params.id;
+    next();
+}, commentsRouter);
+
+module.exports = posts;
