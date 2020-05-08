@@ -1,25 +1,45 @@
 const comments = require('express').Router();
 const db = require('../data/db.js');
 
+comments.get("/", (req, res) => {
+    const { id } = req;
+    db
+        .findPostComments(id)
+        .then(posts =>
+            //an empty array means the id was invalid
+            !posts[0]
+                ? res.status(404).json({
+                    errorMessage: `The post with id ${id} does not exist`
+                })
+                : res.status(200).json(posts[0]))
+        .catch(e => {
+            console.error(e); res.status(500).json({
+                errorMessage: "There was an error while retrieving comments from the database."
+            });
+        });
+});
+
 comments.post("/", (req, res) => {
     const { id } = req;
-    const comment = { ...req.body, post_id: id };
+    const newComment = { ...req.body, post_id: id };
     db
         .findById(id)
-        .then(posts => !posts[0]
-            ? res.status(404).json({
-                message: `The post with id '${id}' does not exist.`
-            })
-            : !req.body.text
-                ? res.status(400).json(
-                    { errorMessage: "Please provide 'text' for the comment" }
-                )
-                : db.insertComment(comment))
+        .then(posts =>
+            //an empty array means the id was invalid
+            !posts[0]
+                ? res.status(404).json({
+                    message: `The post with id '${id}' does not exist.`
+                })
+                : !req.body.text
+                    ? res.status(400).json(
+                        { errorMessage: "Please provide 'text' for the comment" }
+                    )
+                    : db.insertComment(newComment))
         .then(({ id }) => db.findCommentById(id))
-        .then(c => res.status(201).json(c))
-        .catch((e) => {
+        .then(comment => res.status(201).json(comment))
+        .catch(e => {
             console.error(e); res.status(500).json({
-                errorMessage: "The post information could not be retrieved."
+                errorMessage: "There was an error while saving the comment to the database."
             });
         });
 });

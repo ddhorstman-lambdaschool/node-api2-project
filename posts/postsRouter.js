@@ -7,9 +7,31 @@ posts.get("/", (req, res) => {
     db
         .find()
         .then(posts => res.status(200).json(posts))
-        .catch(() => res.status(500).json(
-            { errorMessage: "The posts information could not be retrieved." }
-        ));
+        .catch(e => {
+            console.error(e);
+            res.status(500).json(
+                { errorMessage: "The posts information could not be retrieved." }
+            );
+        });
+});
+
+posts.get("/:id", (req, res) => {
+    const { id } = req.params;
+    db
+        .findById(id)
+        .then(posts =>
+            //an empty array means the id was invalid
+            !posts[0]
+                ? res.status(404).json({
+                    errorMessage: `The post with id '${id}' does not exist`
+                })
+                : res.status(200).json(posts[0]))
+        .catch(e => {
+            console.error(e);
+            res.status(500).json({
+                errorMessage: "The post information could not be retrieved"
+            });
+        })
 });
 
 posts.post("/", (req, res) => {
@@ -23,9 +45,12 @@ posts.post("/", (req, res) => {
         .insert(req.body)
         .then(({ id }) => db.findById(id))
         .then(post => res.status(201).json(post))
-        .catch(() => res.status(500).json({
-            errorMessage: "There was an error while saving the post to the database"
-        }));
+        .catch(e => {
+            console.error(e);
+            res.status(500).json({
+                errorMessage: "There was an error while saving the post to the database"
+            });
+        });
 });
 
 posts.use("/:id/comments", (req, res, next) => {
