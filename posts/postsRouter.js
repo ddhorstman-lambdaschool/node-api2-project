@@ -19,13 +19,17 @@ posts.get("/:id", (req, res) => {
     const { id } = req.params;
     db
         .findById(id)
-        .then(posts =>
+        .then(posts => {
             //an empty array means the id was invalid
-            !posts[0]
-                ? res.status(404).json({
+            if (posts.length === 0) {
+                res.status(404).json({
                     errorMessage: `The post with id '${id}' does not exist.`
-                })
-                : res.status(200).json(posts[0]))
+                });
+            }
+            else {
+                res.status(200).json(posts[0])
+            }
+        })
         .catch(e => {
             console.error(e);
             res.status(500).json({
@@ -59,7 +63,7 @@ posts.delete("/:id", (req, res) => {
         .findById(id)
         .then(posts => {
             //an empty array means the id was invalid
-            if (!posts[0]) {
+            if (posts.length === 0) {
                 res.status(404).json({
                     errorMessage: `The post with id '${id}' does not exist.`
                 });
@@ -70,10 +74,15 @@ posts.delete("/:id", (req, res) => {
             }
         })
         .then(numberDeleted => {
+            //indicates success
             if (numberDeleted === 0) {
                 throw new Error("Error when trying to delete the post.");
             }
-            if (numberDeleted === 1) res.status(200).json(post);
+            //indicates failure
+            if (numberDeleted === 1) {
+                res.status(200).json(post);
+            }
+            //If numberDeleted isn't 0 or 1, something went wrong earlier
         })
         .catch(e => {
             console.error(e);
@@ -89,7 +98,7 @@ posts.put("/:id", (req, res) => {
         .findById(id)
         .then(posts => {
             //an empty array means the id was invalid
-            if (!posts[0]) {
+            if (posts.length === 0) {
                 res.status(404).json({
                     errorMessage: `The post with id '${id}' does not exist.`
                 });
@@ -99,14 +108,23 @@ posts.put("/:id", (req, res) => {
                     errorMessage: "Please provide 'title' and 'contents' for the post."
                 });
             }
-            else return db.update(id, req.body);
+            else {
+                return db.update(id, req.body);
+            }
         })
         .then(numberUpdated => {
+            //indicates failure
             if (numberUpdated === 0) {
                 throw new Error("An error ocurred while trying to update the post");
             }
-            if (numberUpdated === 1) return db.findById(id)
+            //indicates success
+            if (numberUpdated === 1) {
+                return db.findById(id);
+            }
+            //If numberUpdated isn't 0 or 1, something went wrong earlier
         })
+        //If anything goes wrong, the previous function will return undefined
+        //need to be sure we successfully got a post before trying to send it
         .then(posts => posts && res.status(200).json(posts[0]))
         .catch(e => {
             console.error(e);
@@ -117,6 +135,7 @@ posts.put("/:id", (req, res) => {
 });
 
 posts.use("/:id/comments", (req, res, next) => {
+    //forward the id to the comments router
     req.id = req.params.id;
     next();
 }, commentsRouter);
