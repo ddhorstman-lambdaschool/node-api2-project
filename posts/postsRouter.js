@@ -73,7 +73,7 @@ posts.delete("/:id", (req, res) => {
             if (numberDeleted === 0) {
                 throw new Error("Error when trying to delete the post.");
             }
-            else res.status(200).json(post);
+            if (numberDeleted === 1) res.status(200).json(post);
         })
         .catch(e => {
             console.error(e);
@@ -105,9 +105,9 @@ posts.put("/:id", (req, res) => {
             if (numberUpdated === 0) {
                 throw new Error("An error ocurred while trying to update the post");
             }
-            return db.findById(id)
+            if (numberUpdated === 1) return db.findById(id)
         })
-        .then(posts => res.status(200).json(posts[0]))
+        .then(posts => posts && res.status(200).json(posts[0]))
         .catch(e => {
             console.error(e);
             res.status(500).json({

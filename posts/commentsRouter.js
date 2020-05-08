@@ -14,7 +14,7 @@ comments.get("/", (req, res) => {
             }
             else return db.findPostComments(id)
         })
-        .then(comments => res.status(200).json(comments))
+        .then(comments => comments && res.status(200).json(comments))
         .catch(e => {
             console.error(e); res.status(500).json({
                 errorMessage: "There was an error while retrieving comments from the database."
@@ -41,8 +41,8 @@ comments.post("/", (req, res) => {
             }
             else return db.insertComment(newComment)
         })
-        .then(({ id }) => db.findCommentById(id))
-        .then(comment => res.status(201).json(comment))
+        .then(res => res && db.findCommentById(res.id))
+        .then(comment => comment && res.status(201).json(comment))
         .catch(e => {
             console.error(e); res.status(500).json({
                 errorMessage: "There was an error while saving the comment to the database."
