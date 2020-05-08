@@ -35,8 +35,7 @@ posts.get("/:id", (req, res) => {
 });
 
 posts.post("/", (req, res) => {
-    const { title, contents } = req.body;
-    if (!title || !contents) {
+    if (!(req.body.title && req.body.contents)) {
         return res.status(400).json({
             errorMessage: "Please provide 'title' and 'contents' for the post."
         });
@@ -61,18 +60,20 @@ posts.delete("/:id", (req, res) => {
         .then(posts => {
             //an empty array means the id was invalid
             if (!posts[0]) {
-                return res.status(404).json({
+                res.status(404).json({
                     errorMessage: `The post with id '${id}' does not exist.`
                 });
             }
-            post = posts[0];
-            return db.remove(id)
+            else {
+                post = posts[0];
+                return db.remove(id);
+            }
         })
         .then(numberDeleted => {
             if (numberDeleted === 0) {
-                throw new Error("Error deleting the post");
+                throw new Error("Error when trying to delete the post.");
             }
-            res.status(200).json(post)
+            else res.status(200).json(post);
         })
         .catch(e => {
             console.error(e);
@@ -80,6 +81,10 @@ posts.delete("/:id", (req, res) => {
                 errorMessage: "There was an error while removing the post from the database."
             });
         });
+});
+
+posts.put("/:id", (req, res) => {
+
 });
 
 posts.use("/:id/comments", (req, res, next) => {
