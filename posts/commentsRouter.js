@@ -4,14 +4,15 @@ const db = require('../data/db.js');
 comments.get("/", (req, res) => {
     const { id } = req;
     db
-        .findPostComments(id)
+        .findById(id)
         .then(posts =>
             //an empty array means the id was invalid
             !posts[0]
                 ? res.status(404).json({
                     errorMessage: `The post with id ${id} does not exist`
                 })
-                : res.status(200).json(posts[0]))
+                : db.findPostComments(id))
+        .then(comments => res.status(200).json(comments))
         .catch(e => {
             console.error(e); res.status(500).json({
                 errorMessage: "There was an error while retrieving comments from the database."
