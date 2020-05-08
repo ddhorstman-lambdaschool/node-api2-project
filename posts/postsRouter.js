@@ -23,13 +23,13 @@ posts.get("/:id", (req, res) => {
             //an empty array means the id was invalid
             !posts[0]
                 ? res.status(404).json({
-                    errorMessage: `The post with id '${id}' does not exist`
+                    errorMessage: `The post with id '${id}' does not exist.`
                 })
                 : res.status(200).json(posts[0]))
         .catch(e => {
             console.error(e);
             res.status(500).json({
-                errorMessage: "The post information could not be retrieved"
+                errorMessage: "The post information could not be retrieved."
             });
         })
 });
@@ -48,7 +48,36 @@ posts.post("/", (req, res) => {
         .catch(e => {
             console.error(e);
             res.status(500).json({
-                errorMessage: "There was an error while saving the post to the database"
+                errorMessage: "There was an error while saving the post to the database."
+            });
+        });
+});
+
+posts.delete("/:id", (req, res) => {
+    const { id } = req.params;
+    let post;
+    db
+        .findById(id)
+        .then(posts => {
+            //an empty array means the id was invalid
+            if (!posts[0]) {
+                return res.status(404).json({
+                    errorMessage: `The post with id '${id}' does not exist.`
+                });
+            }
+            post = posts[0];
+            return db.remove(id)
+        })
+        .then(numberDeleted => {
+            if (numberDeleted === 0) {
+                throw new Error("Error deleting the post");
+            }
+            res.status(200).json(post)
+        })
+        .catch(e => {
+            console.error(e);
+            res.status(500).json({
+                errorMessage: "There was an error while removing the post from the database."
             });
         });
 });
